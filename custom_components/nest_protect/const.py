@@ -14,6 +14,9 @@ ATTRIBUTION: Final = "Data provided by Google"
 CONF_ACCOUNT_TYPE: Final = "account_type"
 CONF_REFRESH_TOKEN: Final = "refresh_token"
 
+OAUTH2_AUTHORIZE: Final = "https://www.example.com/auth/authorize"
+OAUTH2_TOKEN: Final = "https://www.example.com/auth/token"
+
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.SENSOR,

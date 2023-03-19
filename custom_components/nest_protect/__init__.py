@@ -9,10 +9,12 @@ from aiohttp import ClientConnectorError, ClientError, ServerDisconnectedError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from . import api
 from .const import CONF_ACCOUNT_TYPE, CONF_REFRESH_TOKEN, DOMAIN, LOGGER, PLATFORMS
 from .pynest.client import NestClient
 from .pynest.const import NEST_ENVIRONMENTS
@@ -52,6 +54,22 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Nest Protect from a config entry."""
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
+        )
+    )
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+
+    # If using a requests-based API lib
+    hass.data[DOMAIN][entry.entry_id] = api.ConfigEntryAuth(hass, session)
+
+    # If using an aiohttp-based API lib
+    hass.data[DOMAIN][entry.entry_id] = api.AsyncConfigEntryAuth(
+        aiohttp_client.async_get_clientsession(hass), session
+    )
+
     refresh_token = entry.data[CONF_REFRESH_TOKEN]
     account_type = entry.data[CONF_ACCOUNT_TYPE]
     session = async_get_clientsession(hass)
